@@ -16,13 +16,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/primaryColor"
-            app:titleTextColor="@android:color/white">
+            >
 
             <include layout="@layout/layout_note_toolbar" />
         </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.mrwhoknows.notes.model.LinedEditText
+    <EditText
         android:background="@null"
         android:gravity="top"
         android:id="@+id/noteText"

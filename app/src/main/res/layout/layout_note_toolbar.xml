@@ -40,6 +40,7 @@
     </RelativeLayout>
 
     <TextView
+        android:textColor="@color/primaryTextColor"
         android:id="@+id/noteTextTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -50,7 +51,7 @@
         android:visibility="visible" />
 
     <EditText
-        android:textColor="@color/primaryTextColor"
+        android:textColor="@android:color/black"
         android:id="@+id/noteEditTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

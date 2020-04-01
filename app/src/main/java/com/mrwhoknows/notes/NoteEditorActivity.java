@@ -2,33 +2,210 @@ package com.mrwhoknows.notes;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.mrwhoknows.notes.model.Note;
 
-public class NoteEditorActivity extends AppCompatActivity {
+public class NoteEditorActivity extends AppCompatActivity implements
+        View.OnTouchListener,
+        GestureDetector.OnGestureListener,
+        GestureDetector.OnDoubleTapListener,
+        View.OnClickListener {
 
-    EditText noteTitleEdit, noteEdit;
-    TextView noteTitle;
+    private static final String TAG = "NoteEditor";
+    EditText editTitle, noteEditText;
+    TextView viewTitle;
     ImageView backBtn, checkBtn;
+    RelativeLayout backBtnContainer, checkBtnContainer;
+
+    private Note note;
+    private boolean isNewNote;
+    private GestureDetector gestureDetector;
+
+    private static final int EDIT_MODE_ENABLED = 1;
+    private static final int EDIT_MODE_DISABLED = 0;
+    private int MODE;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_editor);
 
-        noteEdit = findViewById(R.id.noteText);
-        noteTitleEdit = findViewById(R.id.noteEditTitle);
-        noteTitle = findViewById(R.id.noteTextTitle);
+        noteEditText = findViewById(R.id.noteText);
+        editTitle = findViewById(R.id.noteEditTitle);
+        viewTitle = findViewById(R.id.noteTextTitle);
+        backBtn = findViewById(R.id.toolbar_back_arrow);
+        checkBtn = findViewById(R.id.toolbar_check);
+        backBtnContainer = findViewById(R.id.toolbar_back_arrow_container);
+        checkBtnContainer = findViewById(R.id.toolbar_check_container);
 
-        if (getIntent().hasExtra("selected_note")){
-            Note note = getIntent().getParcelableExtra("selected_note");
-            noteTitle.setText(note.getTitle().toString());
-            noteEdit.setText(note.getContent());
+        setListeners();
+
+        if (getIncomingIntent()) {
+//            For New Note (View)
+            setNewNote();
+            enableEditMode();
+        } else {
+//            For Existing Note (Edit)
+            setNoteProperties();
+            disableContentInteraction();
         }
+    }
+
+    public boolean getIncomingIntent() {
+        if (getIntent().hasExtra("selected_note")) {
+            note = getIntent().getParcelableExtra("selected_note");
+
+            MODE = EDIT_MODE_ENABLED;
+            isNewNote = false;
+            return false;
+        }
+        MODE = EDIT_MODE_ENABLED;
+        isNewNote = true;
+        return true;
+    }
+
+    private void setNewNote() {
+        viewTitle.setText("Title");
+        editTitle.setText("Title");
+    }
+    private void setNoteProperties() {
+        viewTitle.setText(note.getTitle());
+        editTitle.setText(note.getTitle());
+        noteEditText.setText(note.getContent());
+    }
+    private void setListeners() {
+        noteEditText.setOnTouchListener(this);
+        gestureDetector = new GestureDetector(this, this);
+        viewTitle.setOnClickListener(this);
+        checkBtn.setOnClickListener(this);
+        backBtn.setOnClickListener(this);
+    }
+    private void disableContentInteraction() {
+        noteEditText.setKeyListener(null);
+        noteEditText.setFocusable(false);
+        noteEditText.setFocusableInTouchMode(false);
+        noteEditText.setCursorVisible(false);
+        noteEditText.clearFocus();
+    }
+    private void enableContentInteraction() {
+        noteEditText.setKeyListener(new EditText(this).getKeyListener());
+        noteEditText.setFocusable(true);
+        noteEditText.setFocusableInTouchMode(true);
+        noteEditText.setCursorVisible(true);
+        noteEditText.requestFocus();
+    }
+    private void enableEditMode() {
+        backBtnContainer.setVisibility(View.GONE);
+        checkBtnContainer.setVisibility(View.VISIBLE);
+
+        viewTitle.setVisibility(View.GONE);
+        editTitle.setVisibility(View.VISIBLE);
+
+        MODE = EDIT_MODE_ENABLED;
+        enableContentInteraction();
+    }
+    private void disableEditMode() {
+        backBtnContainer.setVisibility(View.VISIBLE);
+        checkBtnContainer.setVisibility(View.GONE);
+
+        viewTitle.setVisibility(View.VISIBLE);
+        editTitle.setVisibility(View.GONE);
+
+        MODE = EDIT_MODE_DISABLED;
+        disableContentInteraction();
+    }
+    private void hideKeyboard(){
+        InputMethodManager inputMethodManager = (InputMethodManager) this.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        View view = this.getCurrentFocus();
+        if (view == null){
+            view = new View(this);
+        }
+        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.toolbar_check: {
+                hideKeyboard();
+                disableEditMode();
+                break;
+            }
+            case R.id.noteTextTitle: {
+                enableEditMode();
+                editTitle.requestFocus();
+                editTitle.setSelection(editTitle.length());
+                break;
+            }
+            case R.id.toolbar_back_arrow: {
+                finish();
+                break;
+            }
+        }
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        return gestureDetector.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
 
     }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        return false;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
+        Log.d(TAG, "onDoubleTap: tapped");
+        enableEditMode();
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent e) {
+        return false;
+    }
+
 }
