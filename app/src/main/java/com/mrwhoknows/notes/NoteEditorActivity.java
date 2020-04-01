@@ -1,5 +1,6 @@
 package com.mrwhoknows.notes;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
@@ -208,4 +209,18 @@ public class NoteEditorActivity extends AppCompatActivity implements
         return false;
     }
 
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putInt("mode", MODE);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        MODE = savedInstanceState.getInt("mode");
+        if (MODE == EDIT_MODE_ENABLED){
+            enableEditMode();
+        }
+    }
 }
