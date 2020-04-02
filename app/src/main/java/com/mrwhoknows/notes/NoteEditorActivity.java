@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -16,12 +18,15 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.mrwhoknows.notes.model.Note;
+import com.mrwhoknows.notes.persistence.NoteRepository;
+import com.mrwhoknows.notes.util.Utility;
 
 public class NoteEditorActivity extends AppCompatActivity implements
         View.OnTouchListener,
         GestureDetector.OnGestureListener,
         GestureDetector.OnDoubleTapListener,
-        View.OnClickListener {
+        View.OnClickListener,
+        TextWatcher {
 
     private static final String TAG = "NoteEditor";
     EditText editTitle, noteEditText;
@@ -29,7 +34,8 @@ public class NoteEditorActivity extends AppCompatActivity implements
     ImageView backBtn, checkBtn;
     RelativeLayout backBtnContainer, checkBtnContainer;
 
-    private Note note;
+    private Note initialNote;
+    private Note finalNote;
     private boolean isNewNote;
     private GestureDetector gestureDetector;
 
@@ -37,6 +43,7 @@ public class NoteEditorActivity extends AppCompatActivity implements
     private static final int EDIT_MODE_DISABLED = 0;
     private int MODE;
 
+    private NoteRepository noteRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +59,7 @@ public class NoteEditorActivity extends AppCompatActivity implements
         checkBtnContainer = findViewById(R.id.toolbar_check_container);
 
         setListeners();
+        noteRepository = new NoteRepository(this);
 
         if (getIncomingIntent()) {
 //            For New Note (View)
@@ -64,9 +72,22 @@ public class NoteEditorActivity extends AppCompatActivity implements
         }
     }
 
+    private void saveChanges() {
+        if (isNewNote) {
+            saveNewNote();
+        } else {
+
+        }
+    }
+
+    private void saveNewNote() {
+        noteRepository.insertNoteTask(finalNote);
+    }
+
     public boolean getIncomingIntent() {
         if (getIntent().hasExtra("selected_note")) {
-            note = getIntent().getParcelableExtra("selected_note");
+            initialNote = getIntent().getParcelableExtra("selected_note");
+            finalNote = getIntent().getParcelableExtra("selected_note");
 
             MODE = EDIT_MODE_ENABLED;
             isNewNote = false;
@@ -80,19 +101,29 @@ public class NoteEditorActivity extends AppCompatActivity implements
     private void setNewNote() {
         viewTitle.setText("Title");
         editTitle.setText("Title");
+
+        initialNote = new Note();
+        finalNote = new Note();
+        initialNote.setTitle("Title");
+        finalNote.setTitle("Title");
+
     }
+
     private void setNoteProperties() {
-        viewTitle.setText(note.getTitle());
-        editTitle.setText(note.getTitle());
-        noteEditText.setText(note.getContent());
+        viewTitle.setText(initialNote.getTitle());
+        editTitle.setText(initialNote.getTitle());
+        noteEditText.setText(initialNote.getContent());
     }
+
     private void setListeners() {
         noteEditText.setOnTouchListener(this);
         gestureDetector = new GestureDetector(this, this);
         viewTitle.setOnClickListener(this);
         checkBtn.setOnClickListener(this);
         backBtn.setOnClickListener(this);
+        editTitle.addTextChangedListener(this);
     }
+
     private void disableContentInteraction() {
         noteEditText.setKeyListener(null);
         noteEditText.setFocusable(false);
@@ -100,6 +131,7 @@ public class NoteEditorActivity extends AppCompatActivity implements
         noteEditText.setCursorVisible(false);
         noteEditText.clearFocus();
     }
+
     private void enableContentInteraction() {
         noteEditText.setKeyListener(new EditText(this).getKeyListener());
         noteEditText.setFocusable(true);
@@ -107,6 +139,7 @@ public class NoteEditorActivity extends AppCompatActivity implements
         noteEditText.setCursorVisible(true);
         noteEditText.requestFocus();
     }
+
     private void enableEditMode() {
         backBtnContainer.setVisibility(View.GONE);
         checkBtnContainer.setVisibility(View.VISIBLE);
@@ -117,6 +150,7 @@ public class NoteEditorActivity extends AppCompatActivity implements
         MODE = EDIT_MODE_ENABLED;
         enableContentInteraction();
     }
+
     private void disableEditMode() {
         backBtnContainer.setVisibility(View.VISIBLE);
         checkBtnContainer.setVisibility(View.GONE);
@@ -126,11 +160,27 @@ public class NoteEditorActivity extends AppCompatActivity implements
 
         MODE = EDIT_MODE_DISABLED;
         disableContentInteraction();
+
+        String temp = noteEditText.getText().toString();
+        temp = temp.replace("\n", "");
+        temp = temp.replace(" ", "");
+
+        if (temp.length() > 0) {
+            finalNote.setTitle(editTitle.getText().toString());
+            finalNote.setContent(noteEditText.getText().toString());
+            finalNote.setTimeStamp(Utility.getCurrentTimeStamp());
+
+            if (!finalNote.getContent().equals(initialNote.getContent())
+                    || !finalNote.getTitle().equals(initialNote.getTitle())) {
+                saveChanges();
+            }
+        }
     }
-    private void hideKeyboard(){
+
+    private void hideKeyboard() {
         InputMethodManager inputMethodManager = (InputMethodManager) this.getSystemService(Activity.INPUT_METHOD_SERVICE);
         View view = this.getCurrentFocus();
-        if (view == null){
+        if (view == null) {
             view = new View(this);
         }
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
@@ -219,8 +269,23 @@ public class NoteEditorActivity extends AppCompatActivity implements
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         MODE = savedInstanceState.getInt("mode");
-        if (MODE == EDIT_MODE_ENABLED){
+        if (MODE == EDIT_MODE_ENABLED) {
             enableEditMode();
         }
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+        viewTitle.setText(s.toString());
+    }
+
+    @Override
+    public void afterTextChanged(Editable s) {
+
     }
 }

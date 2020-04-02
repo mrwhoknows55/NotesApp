@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mrwhoknows.notes.R;
 import com.mrwhoknows.notes.model.Note;
+import com.mrwhoknows.notes.util.Utility;
 
 import java.util.ArrayList;
 
@@ -34,7 +35,7 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.title.setText(notes.get(position).getTitle());
-        holder.timeStamp.setText(notes.get(position).getTimeStamp());
+        holder.timeStamp.setText(Utility.getCurrentTimeStamp());
     }
 
     @Override
