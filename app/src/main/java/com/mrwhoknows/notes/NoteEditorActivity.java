@@ -76,7 +76,7 @@ public class NoteEditorActivity extends AppCompatActivity implements
         if (isNewNote) {
             saveNewNote();
         } else {
-
+            updateNote();
         }
     }
 
@@ -84,10 +84,19 @@ public class NoteEditorActivity extends AppCompatActivity implements
         noteRepository.insertNoteTask(finalNote);
     }
 
+    private void updateNote() {
+        noteRepository.updateNoteTask(finalNote);
+    }
+
     public boolean getIncomingIntent() {
         if (getIntent().hasExtra("selected_note")) {
             initialNote = getIntent().getParcelableExtra("selected_note");
-            finalNote = getIntent().getParcelableExtra("selected_note");
+
+            finalNote = new Note();
+            finalNote.setTitle(initialNote.getTitle());
+            finalNote.setContent(initialNote.getContent());
+            finalNote.setTimeStamp(initialNote.getTimeStamp());
+            finalNote.setId(initialNote.getId());
 
             MODE = EDIT_MODE_ENABLED;
             isNewNote = false;
@@ -105,8 +114,6 @@ public class NoteEditorActivity extends AppCompatActivity implements
         initialNote = new Note();
         finalNote = new Note();
         initialNote.setTitle("Title");
-        finalNote.setTitle("Title");
-
     }
 
     private void setNoteProperties() {
@@ -152,6 +159,7 @@ public class NoteEditorActivity extends AppCompatActivity implements
     }
 
     private void disableEditMode() {
+        Log.d(TAG, "disableEditMode: called");
         backBtnContainer.setVisibility(View.VISIBLE);
         checkBtnContainer.setVisibility(View.GONE);
 
@@ -172,6 +180,7 @@ public class NoteEditorActivity extends AppCompatActivity implements
 
             if (!finalNote.getContent().equals(initialNote.getContent())
                     || !finalNote.getTitle().equals(initialNote.getTitle())) {
+                Log.d(TAG, "disableEditMode: called?");
                 saveChanges();
             }
         }
@@ -190,8 +199,8 @@ public class NoteEditorActivity extends AppCompatActivity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.toolbar_check: {
-                hideKeyboard();
                 disableEditMode();
+                hideKeyboard();
                 break;
             }
             case R.id.noteTextTitle: {
@@ -287,5 +296,15 @@ public class NoteEditorActivity extends AppCompatActivity implements
     @Override
     public void afterTextChanged(Editable s) {
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(MODE == EDIT_MODE_DISABLED){
+            super.onBackPressed();
+        }
+        else{
+            onClick(checkBtn);
+        }
     }
 }

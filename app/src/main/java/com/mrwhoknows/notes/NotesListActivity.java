@@ -43,10 +43,9 @@ public class NotesListActivity extends AppCompatActivity implements
 
 //        insertFakeNotes();
         retrieveNotes();
-        Log.d(TAG, "doInBackground: " + Thread.currentThread().getName() );
+        Log.d(TAG, "doInBackground: " + Thread.currentThread().getName());
 
     }
-
 
     private void retrieveNotes() {
         noteRepository = new NoteRepository(this);
@@ -69,7 +68,6 @@ public class NotesListActivity extends AppCompatActivity implements
             mNotes.add(new Note("Title: " + i, "Content", "31 March"));
         }
         adapter.notifyDataSetChanged();
-
     }
 
     private void recyclerViewConfig() {
@@ -99,6 +97,7 @@ public class NotesListActivity extends AppCompatActivity implements
 
     private void deleteNote(Note note) {
         this.mNotes.remove(note);
+        noteRepository.deleteNoteTask(note);
         adapter.notifyDataSetChanged();
     }
 
